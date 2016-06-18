@@ -11,6 +11,7 @@ var (
 	Left   = "left"
 	Center = "center"
 	Right  = "right"
+	Text   = "%%{F%s}%%{B%s} %s %%{F-}%%{B-}"
 )
 
 // Base represent block base attributes

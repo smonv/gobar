@@ -39,20 +39,20 @@ func (p *Panel) Build(msgs map[string]message.Simple) string {
 }
 
 // Start listening message
-func (p *Panel) Start(msgs chan message.Simple, stop <-chan struct{}) {
+func (p *Panel) Start(msgs chan message.Simple, bar chan string, stop <-chan struct{}) {
 	for {
 		select {
 		case <-stop:
 			return
 		case msg := <-msgs:
 			s := p.handleMessage(msg)
-			fmt.Println(s)
+			bar <- s
 		}
 	}
 }
 
 func (p *Panel) handleMessage(m message.Simple) string {
-	s := "%%{l}%s%%{c}%s%%{r}%s"
+	s := "%%{l}%s%%{c}%s%%{r}%s\n"
 
 	pos := m.Align
 	switch {

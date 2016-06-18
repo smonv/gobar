@@ -1,6 +1,7 @@
 package block
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -25,6 +26,17 @@ func NewDateBlock(name string, align string, bgColor string, fgColor string, int
 	}
 }
 
+// Build create text result
+func (d *DateBlock) Build() message.Simple {
+	t := time.Now().Format(time.RFC850)
+	t = fmt.Sprintf(Text, d.FgColor, d.BgColor, t)
+	return message.Simple{
+		Name:  d.Name,
+		Align: d.Align,
+		Text:  t,
+	}
+}
+
 // Run implement block interface
 func (d *DateBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -35,12 +47,7 @@ func (d *DateBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync
 		case <-stop:
 			return
 		case <-ticker.C:
-			t := time.Now().Format(time.RFC850)
-			msg := message.Simple{
-				Name:  d.Name,
-				Align: d.Align,
-				Text:  t,
-			}
+			msg := d.Build()
 			msgs <- msg
 		}
 	}
