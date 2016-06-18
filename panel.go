@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"sync"
 
 	"github.com/tthanh/gobar/block"
 	"github.com/tthanh/gobar/message"
@@ -9,63 +9,63 @@ import (
 
 // Panel represent panel
 type Panel struct {
-	Left   map[string]message.Simple
-	Center map[string]message.Simple
-	Right  map[string]message.Simple
+	Panels  map[string]*Panel
+	Blocks  map[string]string
+	Keys    []string
+	Text    string
+	Pattern string
+	sync.Mutex
 }
 
 // NewPanel creat new panel
-func NewPanel() *Panel {
-	return &Panel{
-		Left:   make(map[string]message.Simple),
-		Center: make(map[string]message.Simple),
-		Right:  make(map[string]message.Simple),
-	}
-}
-
-// Build create panel message
-func (p *Panel) Build(msgs map[string]message.Simple) string {
-	fmtStr := ""
-	pm := []interface{}{}
-
-	for _, m := range msgs {
-		pm = append(pm, m.Text)
-		fmtStr += "%s"
+func NewPanel(blocks []block.Block) *Panel {
+	mPanel := &Panel{
+		Panels:  make(map[string]*Panel),
+		Pattern: "%%{l}%s%%{c}%s%%{r}%s\n",
 	}
 
-	return fmt.Sprintf(fmtStr, pm...)
-}
+	lPanel := &Panel{
+		Blocks: make(map[string]string),
+	}
+	cPanel := &Panel{
+		Blocks: make(map[string]string),
+	}
+	rPanel := &Panel{
+		Blocks: make(map[string]string),
+	}
 
-// Start listening message
-func (p *Panel) Start(msgs chan message.Simple, bar chan string, stop <-chan struct{}) {
-	for {
-		select {
-		case <-stop:
-			return
-		case msg := <-msgs:
-			s := p.handleMessage(msg)
-			bar <- s
+	for _, b := range blocks {
+		switch b.GetAlign() {
+		case block.Left:
+			lPanel.Blocks[b.GetName()] = ""
+			lPanel.Keys = append(lPanel.Keys, b.GetName())
+		case block.Center:
+			cPanel.Blocks[b.GetName()] = ""
+			cPanel.Keys = append(cPanel.Keys, b.GetName())
+		case block.Right:
+			rPanel.Blocks[b.GetName()] = ""
+			rPanel.Keys = append(rPanel.Keys, b.GetName())
+		default:
 		}
 	}
+
+	mPanel.Panels[block.Left] = lPanel
+	mPanel.Panels[block.Center] = cPanel
+	mPanel.Panels[block.Right] = rPanel
+
+	return mPanel
 }
 
-func (p *Panel) handleMessage(m message.Simple) string {
-	s := "%%{l}%s%%{c}%s%%{r}%s\n"
+// Build create panel text
+func (p *Panel) Build(msg message.Simple) {
+	p.Lock()
+	defer p.Unlock()
 
-	pos := m.Align
-	switch {
-	case pos == block.Left:
-		p.Left[m.Name] = m
-	case pos == block.Center:
-		p.Center[m.Name] = m
-	case pos == block.Right:
-		p.Right[m.Name] = m
+	p.Blocks[msg.Name] = msg.Text
+	pStr := ""
+	for _, k := range p.Keys {
+		s := p.Blocks[k]
+		pStr += s
 	}
-
-	l := p.Build(p.Left)
-	c := p.Build(p.Center)
-	r := p.Build(p.Right)
-	fmt.Println(r)
-
-	return fmt.Sprintf(s, l, c, r)
+	p.Text = pStr
 }

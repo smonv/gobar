@@ -17,11 +17,11 @@ type DateBlock struct {
 func NewDateBlock(name string, align string, bgColor string, fgColor string, interval int) *DateBlock {
 	return &DateBlock{
 		Base: Base{
-			Name:     name,
-			Align:    align,
-			BgColor:  bgColor,
-			FgColor:  fgColor,
-			Interval: interval,
+			name:     name,
+			align:    align,
+			bgColor:  bgColor,
+			fgColor:  fgColor,
+			interval: interval,
 		},
 	}
 }
@@ -29,10 +29,10 @@ func NewDateBlock(name string, align string, bgColor string, fgColor string, int
 // Build create text result
 func (d *DateBlock) Build() message.Simple {
 	t := time.Now().Format(time.RFC850)
-	t = fmt.Sprintf(Text, d.FgColor, d.BgColor, t)
+	t = fmt.Sprintf(Text, d.fgColor, d.bgColor, t)
 	return message.Simple{
-		Name:  d.Name,
-		Align: d.Align,
+		Name:  d.name,
+		Align: d.align,
 		Text:  t,
 	}
 }
@@ -41,7 +41,7 @@ func (d *DateBlock) Build() message.Simple {
 func (d *DateBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	ticker := time.NewTicker(time.Duration(d.Interval) * time.Second)
+	ticker := time.NewTicker(time.Duration(d.interval) * time.Second)
 	for {
 		select {
 		case <-stop:
@@ -51,4 +51,14 @@ func (d *DateBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync
 			msgs <- msg
 		}
 	}
+}
+
+// GetName return name
+func (d *DateBlock) GetName() string {
+	return d.name
+}
+
+// GetAlign return align
+func (d *DateBlock) GetAlign() string {
+	return d.align
 }

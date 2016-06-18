@@ -19,11 +19,11 @@ type VolumeBlock struct {
 func NewVolumeBlock(name string, align string, bgColor string, fgColor string, interval int) *VolumeBlock {
 	return &VolumeBlock{
 		Base: Base{
-			Name:     name,
-			Align:    align,
-			BgColor:  bgColor,
-			FgColor:  fgColor,
-			Interval: interval,
+			name:     name,
+			align:    align,
+			bgColor:  bgColor,
+			fgColor:  fgColor,
+			interval: interval,
 		},
 	}
 }
@@ -41,11 +41,11 @@ func (v *VolumeBlock) Build() message.Simple {
 		fmt.Println(err)
 	}
 
-	t := fmt.Sprintf(Text, v.FgColor, v.BgColor, level)
+	t := fmt.Sprintf(Text, v.fgColor, v.bgColor, level)
 
 	return message.Simple{
-		Name:  v.Name,
-		Align: v.Align,
+		Name:  v.name,
+		Align: v.align,
 		Text:  t,
 	}
 }
@@ -53,7 +53,7 @@ func (v *VolumeBlock) Build() message.Simple {
 // Run implement Block interface
 func (v *VolumeBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
-	ticker := time.NewTicker(time.Duration(v.Interval) * time.Second)
+	ticker := time.NewTicker(time.Duration(v.interval) * time.Second)
 	for {
 		select {
 		case <-stop:

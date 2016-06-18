@@ -16,14 +16,16 @@ var (
 
 // Base represent block base attributes
 type Base struct {
-	Name     string
-	Align    string
-	BgColor  string
-	FgColor  string
-	Interval int
+	name     string
+	align    string
+	bgColor  string
+	fgColor  string
+	interval int
 }
 
 // Block interface
 type Block interface {
 	Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup)
+	GetName() string
+	GetAlign() string
 }
