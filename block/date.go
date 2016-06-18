@@ -7,13 +7,26 @@ import (
 	"github.com/tthanh/gobar/message"
 )
 
-// Date block
-type Date struct {
+// DateBlock block
+type DateBlock struct {
 	Base
 }
 
+// NewDateBlock create new DateBlock
+func NewDateBlock(name string, align string, bgColor string, fgColor string, interval int) *DateBlock {
+	return &DateBlock{
+		Base: Base{
+			Name:     name,
+			Align:    align,
+			BgColor:  bgColor,
+			FgColor:  fgColor,
+			Interval: interval,
+		},
+	}
+}
+
 // Run implement block interface
-func (d *Date) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup) {
+func (d *DateBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	ticker := time.NewTicker(time.Duration(d.Interval) * time.Second)

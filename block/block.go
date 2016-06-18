@@ -17,7 +17,6 @@ var (
 type Base struct {
 	Name     string
 	Align    string
-	Text     string
 	BgColor  string
 	FgColor  string
 	Interval int

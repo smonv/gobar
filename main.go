@@ -17,16 +17,10 @@ func main() {
 	stop := make(chan struct{})
 	msgs := make(chan message.Simple)
 
-	date := &block.Date{
-		Base: block.Base{
-			Name:     "datetime",
-			Align:    block.Right,
-			Interval: 1,
-		},
-	}
+	dateBlk := block.NewDateBlock("datetime", block.Right, "", "", 1)
 
 	wg.Add(1)
-	go date.Run(msgs, stop, wg)
+	go dateBlk.Run(msgs, stop, wg)
 
 	go p.Start(msgs, stop)
 
