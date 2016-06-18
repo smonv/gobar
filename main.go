@@ -1,16 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/tthanh/gobar/block"
+	"github.com/tthanh/gobar/message"
 )
 
 func main() {
-	panel := NewPanel()
+	p := NewPanel()
+	wg := new(sync.WaitGroup)
 
-	stopCh := make(chan struct{})
-	fifoCh := make(chan block.Base)
+	stop := make(chan struct{})
+	msgs := make(chan message.Simple)
+
 	date := &block.Date{
 		Base: block.Base{
 			Name:     "datetime",
@@ -18,34 +24,16 @@ func main() {
 			Interval: 1,
 		},
 	}
-	go date.Get(fifoCh)
 
-	for {
-		select {
-		case b := <-fifoCh:
-			str := handleBlock(panel, &b)
-			fmt.Println(str)
-		case <-stopCh:
-		}
-	}
-}
+	wg.Add(1)
+	go date.Run(msgs, stop, wg)
 
-func handleBlock(panel *Panel, b *block.Base) string {
-	p := "%%{l}%s%%{c}%s%%{r}%s"
+	go p.Start(msgs, stop)
 
-	pos := b.Align
-	switch {
-	case pos == block.Left:
-		panel.Left[b.Name] = b
-	case pos == block.Center:
+	osSignal := make(chan os.Signal, 1)
+	signal.Notify(osSignal, syscall.SIGINT, syscall.SIGTERM)
 
-	case pos == block.Right:
-		panel.Right[b.Name] = b
-	}
-
-	l := panel.Build(panel.Left)
-	c := panel.Build(panel.Center)
-	r := panel.Build(panel.Right)
-
-	return fmt.Sprintf(p, l, c, r)
+	<-osSignal
+	close(stop)
+	wg.Wait()
 }

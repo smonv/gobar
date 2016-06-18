@@ -1,5 +1,11 @@
 package block
 
+import (
+	"sync"
+
+	"github.com/tthanh/gobar/message"
+)
+
 // Block Position
 var (
 	Left   = "left"
@@ -19,5 +25,5 @@ type Base struct {
 
 // Block interface
 type Block interface {
-	Get(c chan Block)
+	Run(msgs chan message.Simple, stop <-chan struct{}, wg *sync.WaitGroup)
 }

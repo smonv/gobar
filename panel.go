@@ -4,30 +4,31 @@ import (
 	"fmt"
 
 	"github.com/tthanh/gobar/block"
+	"github.com/tthanh/gobar/message"
 )
 
 // Panel represent panel
 type Panel struct {
-	Left   map[string]*block.Base
-	Center map[string]*block.Base
-	Right  map[string]*block.Base
+	Left   map[string]message.Simple
+	Center map[string]message.Simple
+	Right  map[string]message.Simple
 }
 
 // NewPanel creat new panel
 func NewPanel() *Panel {
 	return &Panel{
-		Left:   make(map[string]*block.Base),
-		Center: make(map[string]*block.Base),
-		Right:  make(map[string]*block.Base),
+		Left:   make(map[string]message.Simple),
+		Center: make(map[string]message.Simple),
+		Right:  make(map[string]message.Simple),
 	}
 }
 
 // Build create panel message
-func (p *Panel) Build(blocks map[string]*block.Base) string {
+func (p *Panel) Build(msgs map[string]message.Simple) string {
 	bodies := []interface{}{}
 
-	for _, b := range blocks {
-		bodies = append(bodies, b.Text)
+	for _, m := range msgs {
+		bodies = append(bodies, m.Text)
 	}
 
 	if len(bodies) == 0 {
@@ -35,4 +36,37 @@ func (p *Panel) Build(blocks map[string]*block.Base) string {
 	}
 
 	return fmt.Sprintf("%v", bodies...)
+}
+
+// Start listening message
+func (p *Panel) Start(msgs chan message.Simple, stop <-chan struct{}) {
+	for {
+		select {
+		case <-stop:
+			return
+		case msg := <-msgs:
+			s := p.handleMessage(msg)
+			fmt.Println(s)
+		}
+	}
+}
+
+func (p *Panel) handleMessage(m message.Simple) string {
+	s := "%%{l}%s%%{c}%s%%{r}%s"
+
+	pos := m.Align
+	switch {
+	case pos == block.Left:
+		p.Left[m.Name] = m
+	case pos == block.Center:
+		p.Center[m.Name] = m
+	case pos == block.Right:
+		p.Right[m.Name] = m
+	}
+
+	l := p.Build(p.Left)
+	c := p.Build(p.Center)
+	r := p.Build(p.Right)
+
+	return fmt.Sprintf(s, l, c, r)
 }
