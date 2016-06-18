@@ -3,6 +3,8 @@ package block
 import (
 	"fmt"
 	"os/exec"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,18 +32,18 @@ func NewVolumeBlock(name string, align string, bgColor string, fgColor string, i
 
 // Build create message
 func (v *VolumeBlock) Build() message.Simple {
-	// level, err := exec.Command("amixer", "get Master | grep 'Front Right:' | awk '{print $5}' | tr -d '[%]'").Output()
-	levelAmixer := exec.Command("amixer", "get", "Master")
-	levelGrep := exec.Command("grep", "'Front Right'")
-	levelAwk := exec.Command("awk", "'{print $5}'")
-	levelTr := exec.Command("tr", "-d", "'[%]'")
+	re := regexp.MustCompile("\\w+")
 
-	level, err := util.PipeCommands(levelAmixer, levelGrep, levelAwk, levelTr)
-	if err != nil {
-		fmt.Println(err)
-	}
+	amixer := exec.Command("amixer", "get", "Master")
+	tail := exec.Command("tail", "-n", "1")
 
-	t := fmt.Sprintf(Text, v.fgColor, v.bgColor, level)
+	output, _ := util.PipeCommands(amixer, tail)
+
+	parts := strings.Fields(string(output))
+	state := re.FindString(parts[len(parts)-1])
+	level := re.FindString(parts[len(parts)-2])
+
+	t := fmt.Sprintf(Text, v.fgColor, v.bgColor, state+" "+level)
 
 	return message.Simple{
 		Name:  v.name,
@@ -63,4 +65,14 @@ func (v *VolumeBlock) Run(msgs chan message.Simple, stop <-chan struct{}, wg *sy
 			msgs <- msg
 		}
 	}
+}
+
+// GetName implement Block interface
+func (v *VolumeBlock) GetName() string {
+	return v.name
+}
+
+// GetAlign implement Block interface
+func (v *VolumeBlock) GetAlign() string {
+	return v.align
 }

@@ -26,10 +26,11 @@ func main() {
 	msgs := make(chan message.Simple)
 	bar := make(chan string)
 
+	volumeBlk := block.NewVolumeBlock("volume", block.Right, "#FFd3d0c8", "#FF2d2d2d", 5)
+	blocks = append(blocks, volumeBlk)
+
 	dateBlk := block.NewDateBlock("datetime", block.Right, "#FFd3d0c8", "#FF2d2d2d", 1)
 	blocks = append(blocks, dateBlk)
-	// volumeBlk := block.NewVolumeBlock("volume", block.Right, "#FFd3d0c8", "#FF2d2d2d", 5)
-	// blocks = append(blocks, volumeBlk)
 
 	mPanel := NewPanel(blocks)
 
@@ -63,7 +64,6 @@ func main() {
 	for {
 		select {
 		case s := <-bar:
-			fmt.Println(s)
 			io.Copy(stdin, bytes.NewBufferString(s))
 		case <-osSignal:
 			stdin.Close()
