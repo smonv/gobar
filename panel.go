@@ -25,17 +25,15 @@ func NewPanel() *Panel {
 
 // Build create panel message
 func (p *Panel) Build(msgs map[string]message.Simple) string {
-	bodies := []interface{}{}
+	fmtStr := ""
+	pm := []interface{}{}
 
 	for _, m := range msgs {
-		bodies = append(bodies, m.Text)
+		pm = append(pm, m.Text)
+		fmtStr += "%s"
 	}
 
-	if len(bodies) == 0 {
-		bodies = append(bodies, "")
-	}
-
-	return fmt.Sprintf("%v", bodies...)
+	return fmt.Sprintf(fmtStr, pm...)
 }
 
 // Start listening message
@@ -67,6 +65,7 @@ func (p *Panel) handleMessage(m message.Simple) string {
 	l := p.Build(p.Left)
 	c := p.Build(p.Center)
 	r := p.Build(p.Right)
+	fmt.Println(r)
 
 	return fmt.Sprintf(s, l, c, r)
 }

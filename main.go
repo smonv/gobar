@@ -19,6 +19,8 @@ func main() {
 	signal.Notify(osSignal, syscall.SIGINT, syscall.SIGTERM)
 
 	p := NewPanel()
+	blocks := []block.Block{}
+
 	wg := new(sync.WaitGroup)
 
 	stop := make(chan struct{})
@@ -26,9 +28,14 @@ func main() {
 	bar := make(chan string)
 
 	dateBlk := block.NewDateBlock("datetime", block.Right, "#FFd3d0c8", "#FF2d2d2d", 1)
+	blocks = append(blocks, dateBlk)
+	volumeBlk := block.NewVolumeBlock("volume", block.Right, "#FFd3d0c8", "#FF2d2d2d", 5)
+	blocks = append(blocks, volumeBlk)
 
-	wg.Add(1)
-	go dateBlk.Run(msgs, stop, wg)
+	for _, b := range blocks {
+		wg.Add(1)
+		go b.Run(msgs, stop, wg)
+	}
 
 	go p.Start(msgs, bar, stop)
 
@@ -56,7 +63,6 @@ func main() {
 		select {
 		case s := <-bar:
 			io.Copy(stdin, bytes.NewBufferString(s))
-			// io.Copy(os.Stdout, bytes.NewBufferString(s))
 		case <-osSignal:
 			err = lemonBar.Wait()
 			if err != nil {
